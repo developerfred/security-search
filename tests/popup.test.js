@@ -276,4 +276,114 @@ describe('Popup Logic', () => {
       });
     });
   });
+
+  describe('Security - URL Protocol Validation', () => {
+    test('should only allow http and https protocols', () => {
+      const allowedProtocols = ['http:', 'https:'];
+      const disallowedProtocols = ['ftp:', 'file:', 'data:', 'javascript:', 'mailto:'];
+
+      allowedProtocols.forEach(protocol => {
+        const url = new URL('/', protocol + '//example.com');
+        expect(url.protocol).toBe(protocol);
+      });
+
+      disallowedProtocols.forEach(protocol => {
+        const url = new URL('/', protocol + '//example.com');
+        expect(['http:', 'https:'].includes(url.protocol)).toBe(false);
+      });
+    });
+  });
+
+  describe('Security - Reason Sanitization', () => {
+    test('should sanitize reason input by removing HTML tags', () => {
+      const sanitizeReason = (text) => {
+        const sanitized = text.trim().slice(0, 500);
+        return sanitized.replace(/<[^>]*>/g, '');
+      };
+
+      expect(sanitizeReason('<script>alert(1)</script>Test')).toBe('alert(1)Test');
+      expect(sanitizeReason('<img src=x onerror=alert(1)>')).toBe('');
+      expect(sanitizeReason('Normal text')).toBe('Normal text');
+    });
+
+    test('should limit reason length to 500 characters', () => {
+      const sanitizeReason = (text) => {
+        const sanitized = text.trim().slice(0, 500);
+        return sanitized.replace(/<[^>]*>/g, '');
+      };
+
+      const longText = 'a'.repeat(600);
+      expect(sanitizeReason(longText).length).toBe(500);
+    });
+  });
+
+  describe('Domain Matching', () => {
+    test('should remove www prefix', () => {
+      const normalizeDomain = (domain) => domain.toLowerCase().replace(/^www\./, '');
+
+      expect(normalizeDomain('www.uniswap.org')).toBe('uniswap.org');
+      expect(normalizeDomain('uniswap.org')).toBe('uniswap.org');
+      expect(normalizeDomain('WWW.UNISWAP.ORG')).toBe('uniswap.org');
+    });
+
+    test('should distinguish between subdomains', () => {
+      const normalizeDomain = (domain) => domain.toLowerCase().replace(/^www\./, '');
+
+      const domain1 = normalizeDomain('app.uniswap.org');
+      const domain2 = normalizeDomain('uniswap.org');
+
+      expect(domain1).not.toBe(domain2);
+      expect(domain1).toBe('app.uniswap.org');
+      expect(domain2).toBe('uniswap.org');
+    });
+
+    test('should not match substring domains', () => {
+      const normalizeDomain = (domain) => domain.toLowerCase().replace(/^www\./, '');
+
+      const safeDomain = normalizeDomain('uniswap.org');
+      const maliciousDomain = normalizeDomain('notuniswap.org');
+
+      expect(safeDomain === maliciousDomain).toBe(false);
+      expect(safeDomain.includes(maliciousDomain)).toBe(false);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    test('should handle empty reason', () => {
+      const sanitizeReason = (text) => {
+        const sanitized = text.trim().slice(0, 500);
+        return sanitized.replace(/<[^>]*>/g, '');
+      };
+
+      expect(sanitizeReason('')).toBe('');
+      expect(sanitizeReason('   ')).toBe('');
+    });
+
+    test('should handle unicode in reason', () => {
+      const sanitizeReason = (text) => {
+        const sanitized = text.trim().slice(0, 500);
+        return sanitized.replace(/<[^>]*>/g, '');
+      };
+
+      expect(sanitizeReason('这是一个测试')).toBe('这是一个测试');
+      expect(sanitizeReason('Test with émoji 🔐')).toBe('Test with émoji 🔐');
+    });
+
+    test('should handle malformed URLs gracefully', () => {
+      const isValidUrl = (string) => {
+        try {
+          const url = new URL(string);
+          return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch {
+          return false;
+        }
+      };
+
+      expect(isValidUrl('not-a-url')).toBe(false);
+      expect(isValidUrl('uniswap')).toBe(false);
+      expect(isValidUrl('htp://wrong')).toBe(false);
+      expect(isValidUrl('ftp://example.com')).toBe(false);
+      expect(isValidUrl('javascript:alert(1)')).toBe(false);
+    });
+  });
 });

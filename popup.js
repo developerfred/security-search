@@ -139,6 +139,11 @@ function extractDomain(url) {
   }
 }
 
+function sanitizeReason(text) {
+  const sanitized = text.trim().slice(0, 500);
+  return sanitized.replace(/<[^>]*>/g, '');
+}
+
 async function reportScam() {
   const urlInput = document.getElementById('scamUrl');
   const reasonInput = document.getElementById('scamReason');
@@ -152,7 +157,11 @@ async function reportScam() {
   }
   
   try {
-    new URL(url);
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      showMessage(messageEl, 'Only HTTP/HTTPS URLs are allowed', 'error');
+      return;
+    }
   } catch {
     showMessage(messageEl, 'Please enter a valid URL', 'error');
     return;
@@ -170,7 +179,7 @@ async function reportScam() {
   
   const newEntry = {
     url,
-    reason: reasonInput.value.trim() || 'No reason provided',
+    reason: sanitizeReason(reasonInput.value),
     reportedAt: Date.now()
   };
   
@@ -186,7 +195,7 @@ async function reportScam() {
     action: 'submitCommunity',
     type: 'scam',
     url: url,
-    reason: reasonInput.value.trim() || 'No reason provided'
+    reason: sanitizeReason(reasonInput.value) || 'No reason provided'
   }).catch(() => {});
   
   showMessage(messageEl, 'Scam reported successfully!', 'success');
@@ -209,7 +218,11 @@ async function markAsSafe() {
   }
   
   try {
-    new URL(url);
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      showMessage(messageEl, 'Only HTTP/HTTPS URLs are allowed', 'error');
+      return;
+    }
   } catch {
     showMessage(messageEl, 'Please enter a valid URL', 'error');
     return;
