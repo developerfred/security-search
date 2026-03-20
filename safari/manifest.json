@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Security Search",
+  "version": "1.0.0",
+  "description": "Protect against scam sites in search results. Report scams and verify safe sites.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.google.com/*",
+    "*://*.bing.com/*",
+    "*://*.duckduckgo.com/*",
+    "*://*.yahoo.com/*",
+    "*://*.baidu.com/*",
+    "https://raw.githubusercontent.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.google.com/search*",
+        "*://*.bing.com/search*",
+        "*://*.duckduckgo.com/*",
+        "*://*.yahoo.com/search*",
+        "*://*.baidu.com/s*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png",
+    "256": "icons/icon256.png",
+    "512": "icons/icon512.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["data/initial-data.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
