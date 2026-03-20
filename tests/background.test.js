@@ -194,64 +194,98 @@ describe('Background Service Worker', () => {
   });
 
   describe('Message Handling', () => {
-    const messageListener = (message, sender, sendResponse) => {
-      if (message.action === 'getLists') {
-        return {
-          scams: mockStorage[STORAGE_KEYS.SCAM_LIST] || [],
-          safe: mockStorage[STORAGE_KEYS.SAFE_LIST] || []
-        };
+    const validateSender = (sender) => {
+      if (!sender || !sender.tab) return false;
+      const url = sender.tab.url;
+      if (!url || !url.startsWith('http')) return false;
+      try {
+        const isAllowed = 
+          url.includes('google.com/search') || 
+          url.includes('bing.com/search') ||
+          url.includes('duckduckgo.com') ||
+          url.includes('yahoo.com/search') ||
+          url.includes('baidu.com/s');
+        return isAllowed;
+      } catch {
+        return false;
       }
-      if (message.action === 'addScam') {
-        return { success: true };
-      }
-      if (message.action === 'syncRemote') {
-        return { success: true };
-      }
-      return false;
     };
 
-    test('should handle getLists message', () => {
-      mockStorage[STORAGE_KEYS.SCAM_LIST] = [];
-      mockStorage[STORAGE_KEYS.SAFE_LIST] = [];
-      
-      const result = messageListener(
-        { action: 'getLists' },
-        {},
-        jest.fn()
-      );
-      
-      expect(result).toBeDefined();
-      expect(result.scams).toEqual([]);
+    test('should accept messages from search engines', () => {
+      const validSender = { tab: { url: 'https://www.google.com/search?q=uniswap' } };
+      expect(validateSender(validSender)).toBe(true);
     });
 
-    test('should handle addScam message', () => {
-      const result = messageListener(
-        { action: 'addScam', url: 'https://test.com', reason: 'Test' },
-        {},
-        jest.fn()
-      );
-      
-      expect(result).toEqual({ success: true });
+    test('should reject messages without sender', () => {
+      expect(validateSender(null)).toBe(false);
+      expect(validateSender({})).toBe(false);
     });
 
-    test('should handle syncRemote message', () => {
-      const result = messageListener(
-        { action: 'syncRemote' },
-        {},
-        jest.fn()
-      );
-      
-      expect(result).toEqual({ success: true });
+    test('should reject messages from non-search engine origins', () => {
+      const invalidSender = { tab: { url: 'https://malicious-site.com' } };
+      expect(validateSender(invalidSender)).toBe(false);
+    });
+  });
+
+  describe('Security - URL Validation', () => {
+    const validateReportData = (url, reason) => {
+      if (!url || typeof url !== 'string') return { valid: false, error: 'Invalid URL' };
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          return { valid: false, error: 'Only HTTP/HTTPS allowed' };
+        }
+        if (parsed.username || parsed.password) {
+          return { valid: false, error: 'Credentials in URL not allowed' };
+        }
+        return { valid: true };
+      } catch {
+        return { valid: false, error: 'Malformed URL' };
+      }
+    };
+
+    test('should accept valid HTTP/HTTPS URLs', () => {
+      expect(validateReportData('https://uniswap.org', '').valid).toBe(true);
+      expect(validateReportData('http://localhost:3000', '').valid).toBe(true);
     });
 
-    test('should return false for unknown action', () => {
-      const result = messageListener(
-        { action: 'unknownAction' },
-        {},
-        jest.fn()
-      );
-      
-      expect(result).toBe(false);
+    test('should reject javascript: URLs', () => {
+      expect(validateReportData('javascript:alert(1)', '').valid).toBe(false);
+    });
+
+    test('should reject data: URLs', () => {
+      expect(validateReportData('data:text/html,<script>alert(1)</script>', '').valid).toBe(false);
+    });
+
+    test('should reject FTP URLs', () => {
+      expect(validateReportData('ftp://files.example.com', '').valid).toBe(false);
+    });
+
+    test('should reject URLs with credentials', () => {
+      expect(validateReportData('https://user:pass@evil.com', '').valid).toBe(false);
+    });
+  });
+
+  describe('Security - Input Sanitization', () => {
+    const sanitizeString = (str, maxLength = 500) => {
+      if (typeof str !== 'string') return '';
+      return str.slice(0, maxLength).replace(/<[^>]*>/g, '');
+    };
+
+    test('should strip HTML tags from reason', () => {
+      expect(sanitizeString('<script>alert(1)</script>')).toBe('alert(1)');
+      expect(sanitizeString('<img onerror=alert(1)>')).toBe('');
+    });
+
+    test('should limit string length', () => {
+      const long = 'a'.repeat(600);
+      expect(sanitizeString(long, 500).length).toBe(500);
+    });
+
+    test('should handle non-string input', () => {
+      expect(sanitizeString(null)).toBe('');
+      expect(sanitizeString(undefined)).toBe('');
+      expect(sanitizeString(123)).toBe('');
     });
   });
 });
