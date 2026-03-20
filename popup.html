@@ -5,217 +5,507 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Security Search</title>
   <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-tertiary: #0f1629;
+      --accent: #00d9ff;
+      --accent-dim: #0099cc;
+      --danger: #ff4757;
+      --success: #2ed573;
+      --warning: #ffa502;
+      --text-primary: #eee;
+      --text-secondary: #888;
+      --text-muted: #666;
+      --border: #333;
+    }
+    
+    [data-theme="light"] {
+      --bg-primary: #f5f7fa;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e8ecf1;
+      --accent: #0099cc;
+      --accent-dim: #007799;
+      --text-primary: #1a1a2e;
+      --text-secondary: #555;
+      --text-muted: #888;
+      --border: #ddd;
+    }
+    
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      width: 320px;
+      width: 340px;
+      min-height: 400px;
       padding: 16px;
-      background: #1a1a2e;
-      color: #eee;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background 0.3s, color 0.3s;
     }
+    
     .header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
       margin-bottom: 16px;
       padding-bottom: 12px;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--border);
     }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
     .header h1 {
       font-size: 18px;
-      color: #00d9ff;
+      color: var(--accent);
     }
-    .stats {
+    
+    .theme-toggle {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .theme-toggle:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .theme-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--text-secondary);
+    }
+    
+    .current-site-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .current-site-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .status-badge {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    
+    .status-badge.safe {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+    
+    .status-badge.danger {
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+    }
+    
+    .current-site-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    
+    .current-site-url {
+      font-size: 14px;
+      font-weight: 500;
+      word-break: break-all;
+      color: var(--accent);
+    }
+    
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .quick-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .quick-btn.scam {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--danger);
+    }
+    
+    .quick-btn.scam:hover {
+      background: rgba(255, 71, 87, 0.3);
+    }
+    
+    .quick-btn.safe {
+      background: rgba(46, 213, 115, 0.15);
+      color: var(--success);
+    }
+    
+    .quick-btn.safe:hover {
+      background: rgba(46, 213, 115, 0.3);
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tab:hover:not(.active) {
+      color: var(--text-primary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .input-group {
+      margin-bottom: 12px;
+    }
+    
+    .input-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-scam {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-scam:hover {
+      background: #ff6b7a;
+    }
+    
+    .btn-safe {
+      background: var(--success);
+      color: #1a1a2e;
+    }
+    
+    .btn-safe:hover {
+      background: #5ae090;
+    }
+    
+    .btn-sync {
+      background: var(--accent);
+      color: #1a1a2e;
+    }
+    
+    .btn-sync:hover {
+      background: var(--accent-dim);
+    }
+    
+    .btn-sync.loading {
+      pointer-events: none;
+    }
+    
+    .btn-sync .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .message {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-top: 10px;
+      display: none;
+      animation: slideIn 0.2s ease;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message.success {
+      background: rgba(46, 213, 115, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(46, 213, 115, 0.3);
+      display: block;
+    }
+    
+    .message.error {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      display: block;
+    }
+    
+    .stats-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin-bottom: 16px;
     }
+    
     .stat-card {
-      background: #16213e;
+      background: var(--bg-secondary);
       padding: 12px;
-      border-radius: 8px;
+      border-radius: 10px;
       text-align: center;
+      border: 1px solid var(--border);
     }
+    
     .stat-number {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: bold;
-      color: #00d9ff;
+      color: var(--accent);
     }
+    
     .stat-label {
-      font-size: 11px;
-      color: #888;
+      font-size: 10px;
+      color: var(--text-secondary);
       text-transform: uppercase;
+      margin-top: 2px;
     }
-    .section {
-      margin-bottom: 16px;
-    }
-    .section-title {
-      font-size: 12px;
-      color: #888;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    input[type="text"], input[type="url"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #333;
-      border-radius: 6px;
-      background: #16213e;
-      color: #eee;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    input:focus {
-      outline: none;
-      border-color: #00d9ff;
-    }
-    .btn {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: opacity 0.2s;
-    }
-    .btn:hover {
-      opacity: 0.9;
-    }
-    .btn-scam {
-      background: #ff4757;
-      color: white;
-    }
-    .btn-safe {
-      background: #2ed573;
-      color: #1a1a2e;
-    }
-    .btn-sync {
-      background: #5352ed;
-      color: white;
-    }
-    .message {
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      margin-top: 8px;
-      display: none;
-    }
-    .message.success {
-      background: rgba(46, 213, 115, 0.2);
-      color: #2ed573;
-      display: block;
-    }
-    .message.error {
-      background: rgba(255, 71, 87, 0.2);
-      color: #ff4757;
-      display: block;
-    }
-    .current-site {
-      background: #16213e;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-    .current-site-label {
-      font-size: 11px;
-      color: #888;
-      margin-bottom: 4px;
-    }
-    .current-site-url {
-      font-size: 14px;
-      color: #00d9ff;
-      word-break: break-all;
-    }
-    .list-preview {
-      max-height: 120px;
-      overflow-y: auto;
-      background: #16213e;
-      border-radius: 8px;
-      padding: 8px;
-    }
-    .list-item {
-      font-size: 12px;
-      padding: 4px 0;
-      border-bottom: 1px solid #333;
+    
+    .footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
-    .list-item:last-child {
-      border-bottom: none;
+    
+    .footer-text {
+      font-size: 11px;
+      color: var(--text-muted);
     }
-    .scam-item {
-      color: #ff4757;
+    
+    .footer-link {
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
     }
-    .safe-item {
-      color: #2ed573;
+    
+    .footer-link:hover {
+      text-decoration: underline;
     }
-    .empty-list {
-      font-size: 12px;
-      color: #666;
-      text-align: center;
-      padding: 20px;
+    
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="2">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-    </svg>
-    <h1>Security Search</h1>
+    <div class="header-left">
+      <svg width="28" height="28" viewBox="0 0 128 128">
+        <defs>
+          <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00d9ff"/>
+            <stop offset="100%" style="stop-color:#0099cc"/>
+          </linearGradient>
+        </defs>
+        <path d="M64 8 L110 28 L110 56 C110 88 64 120 64 120 C64 120 18 88 18 56 L18 28 Z" fill="url(#shieldGrad)"/>
+        <circle cx="64" cy="58" r="28" fill="#1a1a2e"/>
+        <path d="M48 58 L58 68 L80 46" fill="none" stroke="#2ed573" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>Security Search</h1>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sun-icon">
+        <circle cx="12" cy="12" r="5"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+    </button>
   </div>
 
-  <div class="stats">
+  <div class="stats-row">
     <div class="stat-card">
       <div class="stat-number" id="scamCount">0</div>
-      <div class="stat-label">Scams Blocked</div>
+      <div class="stat-label">Scams</div>
     </div>
     <div class="stat-card">
       <div class="stat-number" id="safeCount">0</div>
-      <div class="stat-label">Safe Sites</div>
+      <div class="stat-label">Safe</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="syncCount">0</div>
+      <div class="stat-label">Synced</div>
     </div>
   </div>
 
-  <div class="current-site" id="currentSiteSection" style="display: none;">
-    <div class="current-site-label">Current Page</div>
-    <div class="current-site-url" id="currentSiteUrl"></div>
+  <div class="current-site-card" id="currentSiteSection">
+    <div class="current-site-header">
+      <div class="status-badge" id="currentSiteStatus"></div>
+      <span class="current-site-label">Current Page</span>
+    </div>
+    <div class="current-site-url" id="currentSiteUrl">Loading...</div>
+    <div class="quick-actions" id="quickActions">
+      <button class="quick-btn scam" id="quickReportBtn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Report
+      </button>
+      <button class="quick-btn safe" id="quickSafeBtn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Mark Safe
+      </button>
+    </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Report a Scam</div>
-    <input type="url" id="scamUrl" placeholder="Enter scam URL...">
-    <input type="text" id="scamReason" placeholder="Reason (optional)...">
-    <button class="btn btn-scam" id="reportScamBtn">Report Scam</button>
+  <div class="tabs">
+    <button class="tab active" data-tab="report">Report Scam</button>
+    <button class="tab" data-tab="safe">Mark Safe</button>
+    <button class="tab" data-tab="sync">Sync</button>
+  </div>
+
+  <div class="tab-content active" id="reportTab">
+    <div class="input-group">
+      <label>Scam URL</label>
+      <input type="url" id="scamUrl" placeholder="https://fake-site.com">
+    </div>
+    <div class="input-group">
+      <label>Reason (optional)</label>
+      <input type="text" id="scamReason" placeholder="Why is this a scam?">
+    </div>
+    <button class="btn btn-scam" id="reportScamBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Report Scam Site
+    </button>
     <div class="message" id="scamMessage"></div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Mark as Safe</div>
-    <input type="url" id="safeUrl" placeholder="Enter safe URL...">
-    <button class="btn btn-safe" id="markSafeBtn">Mark as Safe</button>
+  <div class="tab-content" id="safeTab">
+    <div class="input-group">
+      <label>Safe URL</label>
+      <input type="url" id="safeUrl" placeholder="https://official-site.com">
+    </div>
+    <button class="btn btn-safe" id="markSafeBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Mark as Safe
+    </button>
     <div class="message" id="safeMessage"></div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Sync Community List</div>
-    <button class="btn btn-sync" id="syncBtn">Sync Now</button>
+  <div class="tab-content" id="syncTab">
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+      Sync with remote blocklists to get the latest scam and safe site data.
+    </p>
+    <button class="btn btn-sync" id="syncBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Sync Now
+    </button>
     <div class="message" id="syncMessage"></div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Recent Reports</div>
-    <div class="list-preview" id="recentScams"></div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Verified Safe Sites</div>
-    <div class="list-preview" id="recentSafe"></div>
+  <div class="footer">
+    <span class="footer-text">v1.0.0</span>
+    <a href="#" class="footer-link" id="openOptions">Options</a>
   </div>
 
   <script src="popup.js"></script>

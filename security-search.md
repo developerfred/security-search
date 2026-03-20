@@ -1,0 +1,1 @@
+  Atualmente temos um grande problema nos buscadores com sites scam sendo patrocinados, por exemplo quando um usuario procura uniswap o primeiro site é um scam en ão o site oficiak do uniswap, precisamos resolver isso com uma extensao de firefox chrome, safari  com uma public list paras pessoas denunciarem scam e adicionar o site seguro, esse projeto e MIT 
