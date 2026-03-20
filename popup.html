@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Search</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 320px;
+      padding: 16px;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #333;
+    }
+    .header h1 {
+      font-size: 18px;
+      color: #00d9ff;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: #16213e;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00d9ff;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+    }
+    .section {
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #16213e;
+      color: #eee;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    input:focus {
+      outline: none;
+      border-color: #00d9ff;
+    }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn-scam {
+      background: #ff4757;
+      color: white;
+    }
+    .btn-safe {
+      background: #2ed573;
+      color: #1a1a2e;
+    }
+    .btn-sync {
+      background: #5352ed;
+      color: white;
+    }
+    .message {
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+    .message.success {
+      background: rgba(46, 213, 115, 0.2);
+      color: #2ed573;
+      display: block;
+    }
+    .message.error {
+      background: rgba(255, 71, 87, 0.2);
+      color: #ff4757;
+      display: block;
+    }
+    .current-site {
+      background: #16213e;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .current-site-label {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .current-site-url {
+      font-size: 14px;
+      color: #00d9ff;
+      word-break: break-all;
+    }
+    .list-preview {
+      max-height: 120px;
+      overflow-y: auto;
+      background: #16213e;
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .list-item {
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+    }
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    .scam-item {
+      color: #ff4757;
+    }
+    .safe-item {
+      color: #2ed573;
+    }
+    .empty-list {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d9ff" stroke-width="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    <h1>Security Search</h1>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-number" id="scamCount">0</div>
+      <div class="stat-label">Scams Blocked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="safeCount">0</div>
+      <div class="stat-label">Safe Sites</div>
+    </div>
+  </div>
+
+  <div class="current-site" id="currentSiteSection" style="display: none;">
+    <div class="current-site-label">Current Page</div>
+    <div class="current-site-url" id="currentSiteUrl"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Report a Scam</div>
+    <input type="url" id="scamUrl" placeholder="Enter scam URL...">
+    <input type="text" id="scamReason" placeholder="Reason (optional)...">
+    <button class="btn btn-scam" id="reportScamBtn">Report Scam</button>
+    <div class="message" id="scamMessage"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Mark as Safe</div>
+    <input type="url" id="safeUrl" placeholder="Enter safe URL...">
+    <button class="btn btn-safe" id="markSafeBtn">Mark as Safe</button>
+    <div class="message" id="safeMessage"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Sync Community List</div>
+    <button class="btn btn-sync" id="syncBtn">Sync Now</button>
+    <div class="message" id="syncMessage"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Recent Reports</div>
+    <div class="list-preview" id="recentScams"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Verified Safe Sites</div>
+    <div class="list-preview" id="recentSafe"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

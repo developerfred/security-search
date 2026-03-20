@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-20T00:00:00Z",
+  "reports": [
+    {
+      "id": "uuid-v4",
+      "type": "scam",
+      "url": "https://example-scam.com",
+      "targetProtocol": "Uniswap",
+      "reason": "Fake token swap - drains wallet",
+      "reportedBy": "0x...", 
+      "votes": 42,
+      "verified": true,
+      "createdAt": "2026-03-15T10:30:00Z",
+      "sources": ["community", "metamask"]
+    },
+    {
+      "id": "uuid-v4", 
+      "type": "safe",
+      "url": "https://new-protocol.com",
+      "protocolName": "New Protocol",
+      "category": "DEX",
+      "reportedBy": "0x...",
+      "votes": 15,
+      "verified": false,
+      "createdAt": "2026-03-18T14:20:00Z",
+      "sources": ["community"]
+    }
+  ],
+  "stats": {
+    "totalScamReports": 1250,
+    "totalSafeReports": 340,
+    "verifiedScams": 890,
+    "activeReporters": 456
+  }
+}
